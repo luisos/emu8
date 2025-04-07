@@ -30,6 +30,14 @@ static char* skip_spaces(const char *s)
 	return p;
 }
 
+
+static void clear_buffer()
+{
+	while (getchar() != '\n')
+		;
+}
+
+
 static void dump_mem(int offset)
 {
 	offset &= 0xffff;
@@ -51,7 +59,7 @@ static void dump_mem(int offset)
 }
 
 
-void debug_help()
+static void debug_help()
 {
 	puts("Debug keys:");
 	puts("c - continue");
@@ -59,7 +67,7 @@ void debug_help()
 	puts("g - goto <address>");
 	puts("n - next");
 	puts("q - quit");
-	puts("r - show registers");
+	puts("r - show registers\n");
 }
 
 
@@ -68,20 +76,21 @@ void machine_debug(word start)
 	i8080_reset();
 	i8080_cpu.pc = start;
 	machine_cycles = 0;
-	int addr = -1;
-	size_t cmdsize = 128;
-	char *cmd = malloc(cmdsize);
+	unsigned addr = 0;
+	size_t n;
+	char cmd[128];
 	bool stop = false;
 	int ncycles;
 
+	debug_help();
 	machine_dump();
 
 	while (!stop) {
-		//console_restore();
+		console_restore();
 		putchar(':');
 		//ssize_t r = getline(&cmd, &cmdsize, stdin);
 		int c = getchar();
-		//console_init();
+		console_init();
 		char *p = skip_spaces(cmd);
 
 		switch (tolower(c)) {
@@ -122,15 +131,20 @@ void machine_debug(word start)
 				stop = 0;
 			break;
 		case 'd':
-			addr = strtol(skip_spaces(p + 1), NULL, 16);
+			console_restore();
+			printf("d ");
+			//addr = strtol(skip_spaces(p + 1), NULL, 16);
+			n = scanf("%x", &addr);
 			dump_mem(addr);
+			clear_buffer();
+			console_init();
 			break;
 		default:
+			putchar(c);
 			puts("Bad command");
 		}
 	}
 	printf("Total cycles: %u\n", machine_cycles);
-	free(cmd);
 }
 
 

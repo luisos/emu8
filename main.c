@@ -60,8 +60,10 @@ int main(int argc, char **argv)
 	atexit(console_restore);
 	signal(SIGTERM, console_restore);
 
-	if (!binfile)
-		die("No binfile");
+	if (!binfile) {
+		puts("No binfile");
+		exit(1);
+	}
 
 	if (!machine_load_image(binfile, 0))
 		die("Cant't open binary file");
